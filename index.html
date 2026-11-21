@@ -1,0 +1,442 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<meta name="theme-color" content="#ffffff">
+<title>App Portfolio</title>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:Arial,sans-serif;background:#fff;color:#202124}
+button,input{font-family:inherit}
+button{cursor:pointer}
+header{height:62px;border-bottom:1px solid #eee;display:flex;align-items:center;justify-content:space-between;padding:0 18px;position:sticky;top:0;background:#fff;z-index:10}
+.logo{font-size:21px;font-weight:bold}
+.header-actions{display:flex;gap:9px}
+.header-btn{border:1px solid #ddd;background:#fff;padding:10px 13px;border-radius:9px;font-weight:600}
+.primary{background:#1769ff;color:white;border:0}
+.container{max-width:1050px;margin:auto;padding:24px 17px}
+.hero{padding:28px 0 24px}
+.hero h1{font-size:30px;margin-bottom:10px}
+.hero p{color:#666;font-size:14px;line-height:1.6}
+.section-title{font-size:20px;margin:18px 0}
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:19px}
+.app{padding:13px;border:1px solid #eee;border-radius:13px;cursor:pointer;transition:.2s}
+.app:hover{box-shadow:0 4px 16px #00000012;transform:translateY(-2px)}
+.icon{width:100%;aspect-ratio:1/1;object-fit:cover;border-radius:13px;background:#f1f1f1}
+.name{font-size:15px;font-weight:600;margin-top:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rating{font-size:13px;color:#777;margin-top:6px}
+.empty{padding:30px;text-align:center;color:#777;grid-column:1/-1}
+#detail{display:none}
+.back{border:0;background:#f1f3f4;padding:10px 15px;border-radius:8px;margin-bottom:22px}
+.detail-header{display:flex;gap:18px;align-items:center}
+.big-icon{width:105px;height:105px;object-fit:cover;border-radius:20px;background:#eee}
+.detail-title{font-size:24px;margin-bottom:8px}
+.short-info{color:#777;font-size:14px;line-height:1.5}
+.download{background:#1769ff;color:#fff;border:0;padding:13px 25px;border-radius:9px;font-weight:bold;margin-top:17px}
+.about{margin-top:30px}
+.about h3,.screens-section h3{margin-bottom:12px}
+.about p{color:#555;line-height:1.7;font-size:14px}
+.screenshots{display:flex;gap:12px;overflow-x:auto;padding:5px 0 15px}
+.shot{height:240px;width:140px;object-fit:cover;border-radius:12px;border:1px solid #eee;flex-shrink:0}
+.screens-section{margin-top:28px}
+.rate-area{margin-top:25px;padding:17px;background:#f7f8fa;border-radius:12px}
+.stars{display:flex;gap:8px;margin-top:10px}
+.stars button{font-size:27px;border:0;background:none;color:#bbb}
+.stars button.active{color:#ffb400}
+.upload-box{display:none;max-width:550px;margin:25px auto;padding:20px;border:1px solid #eee;border-radius:15px}
+.upload-box h2{margin-bottom:20px}
+.upload-box label{display:block;font-weight:600;font-size:14px;margin:15px 0 7px}
+.upload-box input{width:100%;padding:12px;border:1px solid #ddd;border-radius:9px;background:#fff}
+.upload-box textarea{width:100%;padding:12px;border:1px solid #ddd;border-radius:9px;resize:vertical;min-height:90px}
+.upload-box button{width:100%;padding:14px;border:0;border-radius:9px;background:#1769ff;color:#fff;font-weight:bold;margin-top:18px}
+#uploadStatus{font-size:13px;margin-top:13px;line-height:1.5}
+footer{text-align:center;padding:25px;color:#888;font-size:13px;border-top:1px solid #eee;margin-top:40px}
+@media(max-width:700px){
+ .grid{grid-template-columns:repeat(3,1fr);gap:10px}
+ .app{padding:9px}
+ .name{font-size:13px}
+ .rating{font-size:11px}
+ .hero h1{font-size:25px}
+}
+@media(max-width:430px){
+ .grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+ .container{padding:19px 12px}
+ .detail-title{font-size:21px}
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <div class="logo">App Portfolio</div>
+  <div class="header-actions">
+    <button class="header-btn" onclick="showHome()">Home</button>
+    <button class="header-btn primary" onclick="showUpload()">+ Add App</button>
+  </div>
+</header>
+
+<main class="container">
+
+<section id="home">
+  <div class="hero">
+    <h1>More by NirajAppCreator</h1>
+    <p>Explore our collection of apps and discover something new.</p>
+  </div>
+
+  <h2 class="section-title">All Apps</h2>
+  <div class="grid" id="grid">
+    <div class="empty">Loading apps...</div>
+  </div>
+</section>
+
+<section id="detail">
+  <button class="back" onclick="showHome()">← Back</button>
+
+  <div class="detail-header">
+    <img class="big-icon" id="bigIcon" src="" alt="App icon">
+    <div>
+      <h2 class="detail-title" id="appTitle"></h2>
+      <p class="short-info" id="shortInfo"></p>
+      <div class="rating" id="rating"></div>
+      <button class="download" onclick="downloadApp()">Download APK</button>
+    </div>
+  </div>
+
+  <div class="about">
+    <h3>About this app</h3>
+    <p id="about"></p>
+  </div>
+
+  <div class="screens-section">
+    <h3>Screenshots</h3>
+    <div class="screenshots" id="screenshots">
+      <p>No screenshots available.</p>
+    </div>
+  </div>
+
+  <div class="rate-area">
+    <h3>Rate this app</h3>
+    <div class="stars">
+      <button onclick="rateApp(1)">★</button>
+      <button onclick="rateApp(2)">★</button>
+      <button onclick="rateApp(3)">★</button>
+      <button onclick="rateApp(4)">★</button>
+      <button onclick="rateApp(5)">★</button>
+    </div>
+    <p id="rateMessage" class="rating"></p>
+  </div>
+</section>
+
+<section class="upload-box" id="upload">
+  <button class="back" onclick="showHome()">← Back</button>
+  <h2>Upload New App</h2>
+
+  <form id="appUploadForm">
+    <label>App Name</label>
+    <input type="text" id="appName" placeholder="Enter app name" required>
+
+    <label>App Description</label>
+    <textarea id="appDescription" placeholder="Describe your app"></textarea>
+
+    <label>APK URL</label>
+    <input type="url" id="apkUrl" placeholder="https://example.com/app.apk" required>
+
+    <label>App Icon / Image</label>
+    <input type="file" id="appImage" accept="image/*" required>
+
+    <label>App Screenshots (Multiple)</label>
+    <input type="file" id="appScreenshots" accept="image/*" multiple required>
+
+    <button type="submit" id="uploadBtn">Upload App</button>
+    <p id="uploadStatus"></p>
+  </form>
+</section>
+
+</main>
+
+<footer>© 2026 NirajAppCreator. All rights reserved.</footer>
+
+<script>
+const SUPABASE_URL = "https://wgylobjcxqmjsutgdhdz.supabase.co";
+const SUPABASE_KEY = "sb_publishable_IfpDVaKbbxem461SnCl9UA_LFwdNOon";
+
+const db = window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+
+let apps = [];
+let selectedApp = null;
+
+function showHome(){
+  document.getElementById("home").style.display="block";
+  document.getElementById("detail").style.display="none";
+  document.getElementById("upload").style.display="none";
+}
+
+function showUpload(){
+  document.getElementById("home").style.display="none";
+  document.getElementById("detail").style.display="none";
+  document.getElementById("upload").style.display="block";
+}
+
+async function loadApps(){
+  const grid=document.getElementById("grid");
+  grid.innerHTML='<div class="empty">Loading apps...</div>';
+
+  const {data,error}=await db
+    .from("apps")
+    .select("*");
+
+  if(error){
+    grid.innerHTML='<div class="empty">Error loading apps: '+escapeHTML(error.message)+'</div>';
+    return;
+  }
+
+  apps=data||[];
+  renderApps();
+}
+
+function escapeHTML(value){
+  return String(value??"").replace(/[&<>"']/g,function(char){
+    return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[char];
+  });
+}
+
+async function renderApps(){
+  const grid=document.getElementById("grid");
+  grid.innerHTML="";
+
+  if(apps.length===0){
+    grid.innerHTML='<div class="empty">No apps uploaded yet.</div>';
+    return;
+  }
+
+  for(let i=0;i<apps.length;i++){
+    const app=apps[i];
+
+    const {data:ratings}=await db
+      .from("app_ratings")
+      .select("score")
+      .eq("app_name",app.name);
+
+    let average="New";
+    if(ratings&&ratings.length){
+      const total=ratings.reduce((sum,item)=>sum+Number(item.score),0);
+      average=(total/ratings.length).toFixed(1)+" ★";
+    }
+
+    const card=document.createElement("div");
+    card.className="app";
+    card.innerHTML=`
+      <img class="icon" src="${escapeHTML(app.image_url||"")}" alt="">
+      <div class="name">${escapeHTML(app.name)}</div>
+      <div class="rating">${average}</div>
+    `;
+    card.onclick=()=>openDetail(i);
+    grid.appendChild(card);
+  }
+}
+
+async function openDetail(index){
+  selectedApp=apps[index];
+
+  document.getElementById("home").style.display="none";
+  document.getElementById("upload").style.display="none";
+  document.getElementById("detail").style.display="block";
+
+  document.getElementById("bigIcon").src=selectedApp.image_url||"";
+  document.getElementById("appTitle").textContent=selectedApp.name;
+  document.getElementById("shortInfo").textContent="TDevelopersIndia";
+  document.getElementById("about").textContent=selectedApp.description||"Explore this application.";
+  document.getElementById("rating").textContent="Loading rating...";
+  document.getElementById("rateMessage").textContent="";
+
+  document.querySelectorAll(".stars button").forEach(b=>b.classList.remove("active"));
+
+  await Promise.all([
+    loadRatings(),
+    loadScreenshots(selectedApp.name)
+  ]);
+}
+
+async function loadRatings(){
+  const {data,error}=await db
+    .from("app_ratings")
+    .select("score")
+    .eq("app_name",selectedApp.name);
+
+  if(error){
+    document.getElementById("rating").textContent="Rating unavailable";
+    return;
+  }
+
+  if(!data||!data.length){
+    document.getElementById("rating").textContent="No ratings yet";
+    return;
+  }
+
+  const avg=data.reduce((sum,item)=>sum+Number(item.score),0)/data.length;
+  document.getElementById("rating").textContent=
+    avg.toFixed(1)+" ★ · "+data.length+" ratings";
+}
+
+async function loadScreenshots(appName){
+  const box=document.getElementById("screenshots");
+  box.innerHTML="<p>Loading screenshots...</p>";
+
+  const {data,error}=await db
+    .from("app_screenshots")
+    .select("image_url")
+    .eq("app_name",appName)
+    .order("created_at",{ascending:true});
+
+  if(error||!data||data.length===0){
+    box.innerHTML="<p>No screenshots available.</p>";
+    return;
+  }
+
+  box.innerHTML="";
+  data.forEach(item=>{
+    const img=document.createElement("img");
+    img.className="shot";
+    img.src=item.image_url;
+    img.alt="App screenshot";
+    box.appendChild(img);
+  });
+}
+
+function downloadApp(){
+  if(selectedApp&&selectedApp.apk_url){
+    window.open(selectedApp.apk_url,"_blank");
+  }else{
+    alert("APK URL not available.");
+  }
+}
+
+async function rateApp(score){
+  if(!selectedApp)return;
+
+  let deviceId=localStorage.getItem("portfolio_device_id");
+  if(!deviceId){
+    deviceId="device-"+Math.random().toString(36).slice(2)+Date.now();
+    localStorage.setItem("portfolio_device_id",deviceId);
+  }
+
+  const {error}=await db
+    .from("app_ratings")
+    .upsert({
+      app_name:selectedApp.name,
+      score:score,
+      device_id:deviceId
+    },{onConflict:"app_name,device_id"});
+
+  if(error){
+    document.getElementById("rateMessage").textContent="Rating failed: "+error.message;
+    return;
+  }
+
+  document.querySelectorAll(".stars button").forEach((button,index)=>{
+    button.classList.toggle("active",index<score);
+  });
+
+  document.getElementById("rateMessage").textContent="Thanks for rating!";
+  await loadRatings();
+}
+
+document.getElementById("appUploadForm").addEventListener("submit",async function(e){
+  e.preventDefault();
+
+  const btn=document.getElementById("uploadBtn");
+  const status=document.getElementById("uploadStatus");
+
+  const name=document.getElementById("appName").value.trim();
+  const description=document.getElementById("appDescription").value.trim();
+  const apkUrl=document.getElementById("apkUrl").value.trim();
+  const imageFile=document.getElementById("appImage").files[0];
+  const screenshotFiles=document.getElementById("appScreenshots").files;
+
+  if(!name||!apkUrl||!imageFile||!screenshotFiles.length){
+    status.textContent="Please fill all required fields.";
+    return;
+  }
+
+  btn.disabled=true;
+  btn.textContent="Uploading...";
+  status.textContent="Uploading app icon...";
+
+  try{
+    const imagePath=Date.now()+"-"+imageFile.name.replace(/[^a-zA-Z0-9._-]/g,"_");
+
+    const imageUpload=await db.storage
+      .from("app-images")
+      .upload(imagePath,imageFile);
+
+    if(imageUpload.error)throw imageUpload.error;
+
+    const imageUrl=db.storage
+      .from("app-images")
+      .getPublicUrl(imagePath).data.publicUrl;
+
+    status.textContent="Saving app details...";
+
+    const appInsert=await db
+      .from("apps")
+      .insert({
+        name:name,
+        description:description,
+        apk_url:apkUrl,
+        image_url:imageUrl
+      });
+
+    if(appInsert.error)throw appInsert.error;
+
+    for(let i=0;i< screenshotFiles.length;i++){
+      const file=screenshotFiles[i];
+
+      status.textContent="Uploading screenshot "+(i+1)+" of "+screenshotFiles.length+"...";
+
+      const screenshotPath=Date.now()+"-"+i+"-"+file.name.replace(/[^a-zA-Z0-9._-]/g,"_");
+
+      const screenshotUpload=await db.storage
+        .from("app-screenshots")
+        .upload(screenshotPath,file);
+
+      if(screenshotUpload.error)throw screenshotUpload.error;
+
+      const screenshotUrl=db.storage
+        .from("app-screenshots")
+        .getPublicUrl(screenshotPath).data.publicUrl;
+
+      const screenshotInsert=await db
+        .from("app_screenshots")
+        .insert({
+          app_name:name,
+          image_url:screenshotUrl
+        });
+
+      if(screenshotInsert.error)throw screenshotInsert.error;
+    }
+
+    status.textContent="App uploaded successfully!";
+    this.reset();
+
+    await loadApps();
+    setTimeout(showHome,1200);
+
+  }catch(error){
+    status.textContent="Upload Error: "+error.message;
+  }
+
+  btn.disabled=false;
+  btn.textContent="Upload App";
+});
+
+loadApps();
+</script>
+
+</body>
+</html>
